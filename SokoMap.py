@@ -189,6 +189,14 @@ class SokoMap:
                 by = by + 1
         
         if (bx, by) != box:
+            # Some puzzles have multiple tunnels and require a box to pushed
+            # into the tunnel and then the player to travel through another
+            # tunnel and push it out of the tunnel again - credit: AJ
+            # To solve that, the macro will not push the box out of the tunnel
+            # but rather leave it on the edge
+            bx = bx - px
+            by = by - py
+            
             return (bx, by)
         
         return None
@@ -197,6 +205,7 @@ class SokoMap:
     def move(self, nplayer):
         (x,y) = self.getPlayer()
         nMap = deepcopy(self.sm)
+        box = None
         
         # Transform the current (past) location of the player
  
@@ -231,9 +240,11 @@ class SokoMap:
             bx = nx + xdiff
             by = ny + ydiff
 			
-            #box = self.tunnelMacro(nMap, (bx, by), (xdiff, ydiff))
-            box = None
+            box = self.tunnelMacro(nMap, (bx, by), (xdiff, ydiff))
             if box is not None:
+                # print "TUNNEL"
+                #  self.printMap()
+                #  print "-------"
                 # print "Tunnel From ", (bx, by), " to ", box
                 (bx, by) = box
 
@@ -251,7 +262,6 @@ class SokoMap:
                 # it must be a space (that's checked inside tunnelMacro)
                 
                 nMap[ny][nx] = self.player
-			
 			          
             # print ""
             # print bx,by
@@ -270,6 +280,8 @@ class SokoMap:
         nSokoMap = SokoMap()
         nSokoMap.setMap(nMap)
         
+        # if box is not None:
+        #     nSokoMap.printMap()
         return nSokoMap
     
     def children(self):
