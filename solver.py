@@ -154,5 +154,8 @@ if __name__ == '__main__':
     start = time.time()
     sol = IDAstar(smap, simpleHeuristic)
     print time.time()-start
-    sol.printMap()
+    if sol is not None:
+        sol.printMap()
+        print "\n"
+        print sol.getMoveList()
     

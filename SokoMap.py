@@ -20,6 +20,7 @@ class SokoMap:
         self.fVal = 0
         
         self.parent = None
+        self.moveList = []
     
     def __eq__(self, other):
         if isinstance(other, SokoMap):
@@ -201,6 +202,15 @@ class SokoMap:
             return (bx, by)
         
         return None
+    
+    def addMove(self, m):
+        self.moveList.append(m)
+    
+    def setMoveList(self, l):
+        self.moveList = deepcopy(l)
+    
+    def getMoveList(self):
+        return self.moveList
 
     
     def move(self, nplayer):
@@ -220,6 +230,9 @@ class SokoMap:
         # transform the new location of the player
         
         (nx,ny) = nplayer
+        xdiff = nx - x
+        ydiff = ny - y
+        m = (xdiff, ydiff)
         carry = False
         if nMap[ny][nx] == self.space:
             nMap[ny][nx] = self.player
@@ -236,12 +249,10 @@ class SokoMap:
         
         # push a block into a new space if necessary
         if carry:
-            xdiff = nx - x
-            ydiff = ny - y
             bx = nx + xdiff
             by = ny + ydiff
 			
-            box = self.tunnelMacro(nMap, (bx, by), (xdiff, ydiff))
+            box = self.tunnelMacro(nMap, (bx, by), m)
             if box is not None:
                 # print "TUNNEL"
                 #  self.printMap()
@@ -280,6 +291,8 @@ class SokoMap:
         
         nSokoMap = SokoMap()
         nSokoMap.setMap(nMap)
+        nSokoMap.setMoveList(self.getMoveList())
+        nSokoMap.addMove(m)
         
         # if box is not None:
         #     nSokoMap.printMap()
