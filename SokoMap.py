@@ -1,3 +1,4 @@
+import sys
 from copy import deepcopy
 
 class SokoMap:
@@ -317,6 +318,181 @@ class SokoMap:
             childList.append(self.move(nplayer))
 
         return childList
+    
+    def getNeighbors(self, node):
+        (x,y) = node
+        suc = []
+        
+        # X+1
+        try:
+            if self.sm[y][x+1] != self.wall and y >= 0 and x >= 0:
+                suc.append((x+1, y))
+        except IndexError:
+            pass
+        # X-1
+        try:
+            if self.sm[y][x-1] != self.wall and y >= 0 and x >= 1:
+                suc.append((x-1, y))
+        except IndexError:
+            pass
+         # Y+1
+        try:
+            if self.sm[y+1][x] != self.wall and y >= 0 and x >= 0:
+                suc.append((x, y+1))
+        except IndexError:
+            pass
+        # Y-1
+        try:
+            if self.sm[y-1][x] != self.wall and y >= 1 and x >= 0:
+                suc.append((x, y-1))
+        except IndexError:
+            pass
+        
+        #print node, suc
+        return suc
+        
+        
+    def shortestPath(self, source, target):
+        """Dijkstra's algorithm from the pseudocode in wikipedia"""
+        dist = {}
+        prev = {}
+        q = []
+        for y,a in enumerate(self.sm):
+             for x,b in enumerate(self.sm[y]):
+                 dist[(x,y)] = sys.maxint
+                 prev[(x,y)] = None
+                 q.append((x,y))
+        dist[source] = 0
+
+        while len(q) is not 0:
+            # find the node with minimum value (u)
+            d = deepcopy(dist)
+            while True:
+                b = dict(map(lambda item: (item[1],item[0]), d.items()))
+                u = b[min(b.keys())]
+                if u not in q:
+                    d.pop(u)
+                else:
+                    break
+            
+            if dist[u] == sys.maxint: # remaining nodes are inaccessible
+                break
+                
+            q.remove(u)
+            
+            
+            if u == target: # target found
+                break
+                
+            for v in self.getNeighbors(u):
+                alt = dist[u] + 1
+                if alt < dist[v]:
+                    dist[v] = alt
+                    prev[v] = u
+        
+        s = []
+        u = target
+        while prev[u] is not None:
+            s.append(u)
+            u = prev[u]
+        s.reverse()
+        
+        return s
+    
+    
+    def buildInfluenceTable(self):
+        self.influenceTable = {}
+        for sy,a in enumerate(self.sm):
+            for sx,b in enumerate(self.sm[sy]):
+                inf = {}
+                if self.sm[sy][sx] == self.wall:
+                    break
+                for ty,a in enumerate(self.sm):
+                    for tx,b in enumerate(self.sm[ty]):
+                        if self.sm[ty][tx] == self.wall:
+                            break
+                        path = self.shortestPath((sx, sy), (tx, ty))
+                        score = 0.0
+                        for s in path:
+                            (x, y) = s
+                            sscore = 0.0
+                            # Alternatives
+                            for n in self.getNeighbors(s):
+                                if n not in path:
+                                    (nx, ny) = n
+                                    px = nx - x
+                                    py = ny - y
+                                    hx = x - px
+                                    hy = y - py
+                                    if self.sm[ny][nx] == self.wall:
+                                        sscore = 0
+                                    elif self.sm[hy][hx] != self.wall:
+                                        # "pushability" test
+                                        # this tests if we can push a box from
+                                        # s to n. It's an inacurate test
+                                        # i.e. it's not always possible with
+                                        # this condition but it will do
+                                        sscore = 2
+                                    else:
+                                        sscore = 1
+                            # Goal-Skew
+                            for g in self.getGoals():
+                                gpath = self.shortestPath((sx,sy), g)
+                                if s in gpath:
+                                    sscore = sscore / 2
+                                    break
+                                    
+                            # Connection
+                            si = path.index(s)
+                            if len(path) < si+1:
+                                n = path[si+1]
+                                (nx, ny) = n
+                                px = nx - x
+                                py = ny - y
+                                hx = x - px
+                                hy = y - py
+                                # Same poor test for "pushability" as before
+                                if self.sm[hy][hx] != self.wall:
+                                    sscore = sscore + 2
+                                else:
+                                    sscore = sscore + 1
+                            
+                            # Tunnel
+                            if si > 0:
+                                (mx, my) = path[si-1]
+                                px = x - mx
+                                py = y - my
+                                
+                                if px != 0: # horizontal push
+                                    if self.sm[my+1][mx] == self.wall and \
+                                       self.sm[my-1][mx] == self.wall:
+                                        sscore = 0
+                                else:   # vertical push
+                                    if self.sm[my][mx+1] == self.wall and \
+                                       self.sm[my][mx-1] == self.wall:
+                                        sscore = 0
+                            
+                            score = score + sscore
+                        inf[(tx, ty)] = score
+                self.influenceTable[(sx, sy)] = deepcopy(inf)
+                
+        average = 0.0
+        count = 0
+
+        for k,v in self.influenceTable:
+            for kk, vv in v:
+                count = count + 1
+                average = average + vv
+                
+        average = average / count
+        if average < 6:
+            self.influenceThresh = 6
+        else:
+            self.influenceThresh = average
+        
+        self.influenceHistory = 10
+                
+                
     
     def staticDeadlock(self):
         """Detects fixed deadlocks (very basic, not perfect"""

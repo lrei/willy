@@ -61,6 +61,7 @@ def isClosed(closedSet, x):
     
 
 def IDAstar(sm, h):
+    MAXNODES = 20000000
     openSet = []
     closedSet = []
     visitSet = []
@@ -76,11 +77,19 @@ def IDAstar(sm, h):
         ht = HashTable.HashTable()
         
         while len(openSet) > 0:
+            nodes = 0
             currentState = openSet.pop(0)
             #currentState.printMap()
             
+            nodes = nodes + 1
             if currentState.isSolution():
                 return currentState # SOLUTION FOUND!!!
+                
+            if nodes % 1000000 == 0:
+                print (nodes/1000000), "M nodes checked"
+            if nodes == MAXNODES:
+                print "Limit of nodes reached: exiting without a solution."
+                sys.exit(1)
                 
             if currentState.getF() <= pathLimit:
                 closedSet.insert(0, currentState)
@@ -137,6 +146,11 @@ if __name__ == '__main__':
     print "-----"
     smap.printMap()
     #sys.exit(1)
+    
+    #smap.buildInfluenceTable()
+    #sys.exit(-1)
+    
+    
     start = time.time()
     sol = IDAstar(smap, simpleHeuristic)
     print time.time()-start
