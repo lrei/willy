@@ -8,7 +8,16 @@ import SokoMap, HashTable
 def manDistance(a, b):
     return abs(a[0]-b[0]) + abs(a[1]-b[1])
 
-def simpleHeuristic(sm):
+def precomputeDistances(sm):
+    """Distances from any square to any other square.
+       Used for minmatching"""
+    
+    imap = sm.getMap()
+        
+
+    
+
+def heuristic(sm):
     # generate all possible combinations of goals for each block
     solutions = []
     index = 0
@@ -51,6 +60,17 @@ def simpleHeuristic(sm):
     # print "-------"
     # print result
     # print best
+    
+    w = sm.getPlayer()
+    d = sys.maxint
+    v = (-1,-1)
+    for x in sm.getUnplacedBlocks():
+        if manDistance(w, x) < d:
+            d = manDistance(w, x)
+            v = x
+    if v is not (-1,-1):
+        best = best + d        
+    
     return best
 
 def isClosed(closedSet, x):
@@ -75,9 +95,9 @@ def IDAstar(sm, h):
         sm.setG(0)
         openSet.insert(0, sm)
         ht = HashTable.HashTable()
+        nodes = 0
         
         while len(openSet) > 0:
-            nodes = 0
             currentState = openSet.pop(0)
             #currentState.printMap()
             
@@ -100,8 +120,8 @@ def IDAstar(sm, h):
                         continue
                     
                     # check if this has already been generated
-                    #if ht.checkAdd(x):
-                    #    continue
+                    if ht.checkAdd(x):
+                        continue
                     
                     # compute G for each
                     x.setG(currentState.getG() + 1)
@@ -111,6 +131,7 @@ def IDAstar(sm, h):
             else:
                 visitSet.insert(0, currentState)
         
+        #print "Nodes checked = ", nodes
         print "iteration = ", it
         it = it + 1
         if len(visitSet) == 0:
@@ -152,7 +173,7 @@ if __name__ == '__main__':
     
     
     start = time.time()
-    sol = IDAstar(smap, simpleHeuristic)
+    sol = IDAstar(smap, heuristic)
     print time.time()-start
     if sol is not None:
         sol.printMap()

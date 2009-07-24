@@ -59,6 +59,9 @@ class SokoMap:
             
         self.sm = SokoMap
     
+    def getMap(self):
+        return self.sm
+    
     def printMap(self):
         #y = len(self.sm)
         #x = len(self.sm[0])
@@ -253,6 +256,7 @@ class SokoMap:
             by = ny + ydiff
 			
             box = self.tunnelMacro(nMap, (bx, by), m)
+            #box = None
             if box is not None:
                 # print "TUNNEL"
                 #  self.printMap()
