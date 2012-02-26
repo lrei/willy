@@ -1,1 +1,12 @@
 Sokoban Solver
+	Uses the IDA* search algorithm
+	Minmatching
+	Reduces search space by removing unsafe positions
+	Hash Tables to prevent loops
+	Macro moves to merge multiple states into a single state
+	Relevance cuts
+
+Implemented in Python
+
+
+Paper describing this project: http://www.scribd.com/doc/82055671/
