@@ -171,10 +171,7 @@ class SokoMap:
         return True
 
     def isSolution(self):
-        if len(self.getUnplacedBlocks()) != 0:
-            return False
-        else:
-            return True
+        return (len(self.getUnplacedBlocks()) == 0)
 
     def tunnelMacro(self, nMap, box, push):
         (px, py) = push
