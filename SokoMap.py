@@ -254,7 +254,7 @@ class SokoMap:
         if carry:
             bx = nx + xdiff
             by = ny + ydiff
-			
+            
             box = self.tunnelMacro(nMap, (bx, by), m)
             #box = None
             if box is not None:
@@ -278,7 +278,7 @@ class SokoMap:
                 # it must be a space (that's checked inside tunnelMacro)
                 
                 nMap[ny][nx] = self.player
-			          
+                      
             # print ""
             # print bx,by
             # for line in nMap:
@@ -514,34 +514,34 @@ class SokoMap:
     def staticDeadlock(self):
         """Detects fixed deadlocks (very basic, not perfect"""
 
-		# Place Deadlock Markers in corners (without goals)
+        # Place Deadlock Markers in corners (without goals)
         for y,a in enumerate(self.sm):
             for x,b in enumerate(self.sm[y]):
                 if x == 0 or x == (len(self.sm[0])-1) or \
-				   y == 0 or (y == len(self.sm)-1):
+                   y == 0 or (y == len(self.sm)-1):
                     continue
                 if self.sm[y][x] == self.space:
                     try:
                         if self.sm[y-1][x] == self.wall and \
-						   self.sm[y][x+1] == self.wall:
+                           self.sm[y][x+1] == self.wall:
                             self.sm[y][x] = self.deadlock
                     except IndexError:
                         pass
                     try:
                         if self.sm[y+1][x] == self.wall and \
-						   self.sm[y][x+1] == self.wall:
+                           self.sm[y][x+1] == self.wall:
                             self.sm[y][x] = self.deadlock
                     except IndexError:
                         pass
                     try:
                         if self.sm[y-1][x] == self.wall and \
-						   self.sm[y][x-1] == self.wall:
+                           self.sm[y][x-1] == self.wall:
                             self.sm[y][x] = self.deadlock
                     except IndexError:
                         pass
                     try:
                         if self.sm[y+1][x] == self.wall and \
-						   self.sm[y][x-1] == self.wall:
+                           self.sm[y][x-1] == self.wall:
                             self.sm[y][x] = self.deadlock
                     except IndexError:
                         pass
