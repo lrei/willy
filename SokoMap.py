@@ -4,7 +4,7 @@ from copy import deepcopy
 class SokoMap:
     def __init__(self):
         self.sm = []
-        
+
         # Values of map pieces
         self.goal = '.'
         self.player = '@'
@@ -15,36 +15,36 @@ class SokoMap:
         self.playerOnGoal = '!'
         self.deadlock = 'x'
         self.playerOnDeadlock ='+'
-        
+
         self.gVal = 0
         self.fVal = 0
-        
+
         self.parent = None
         self.moveList = []
-    
+
     def __eq__(self, other):
         if isinstance(other, SokoMap):
             return self.sm == other.sm
         return NotImplemented
-    
+
     def setMap(self, m):
         self.sm = m
-    
+
     def setG(self, val):
         self.gVal = val
-    
+
     def getG(self):
         return self.gVal
-    
+
     def setF(self, val):
         self.fVal = val
-        
+
     def getF(self):
         return self.gVal
-    
+
     def setParent(self, parent):
         self.parent = parent
-        
+
     def readMap(self, fileName):
         # read from txt map file
         mapFile = open(fileName, 'r')
@@ -56,22 +56,22 @@ class SokoMap:
         while SokoMap[-1] == ['\n'] or SokoMap[-1] == []:
              # remove last "line" (empty, original only had a newline)
             SokoMap.pop()
-            
+
         self.sm = SokoMap
-    
+
     def getMap(self):
         return self.sm
-    
+
     def printMap(self):
         #y = len(self.sm)
         #x = len(self.sm[0])
-        
+
         for line in self.sm:
             print line
             # for c in line:
             #     print c,
-            # print 
-    
+            # print
+
     def getSomething(self, something):
         result = []
         y = 0
@@ -82,25 +82,25 @@ class SokoMap:
                     result.append((x,y))
                 x = x + 1
             y = y + 1
-        
+
         return result
-    
+
     def getGoals(self):
         total = []
-        total.extend(self.getSomething(self.goal)) 
-        total.extend(self.getSomething(self.blockOnGoal)) 
+        total.extend(self.getSomething(self.goal))
+        total.extend(self.getSomething(self.blockOnGoal))
         total.extend(self.getSomething(self.playerOnGoal))
         return total
-    
+
     def getBlocks(self):
         total = []
-        total.extend(self.getSomething(self.block)) 
+        total.extend(self.getSomething(self.block))
         total.extend(self.getSomething(self.blockOnGoal))
         return total
-    
+
     def getUnplacedBlocks(self):
         return self.getSomething(self.block)
-    
+
     def getPlayer(self):
         if len(self.getSomething(self.player)) is not 0:
             return self.getSomething(self.player)[0]
@@ -108,78 +108,75 @@ class SokoMap:
             return self.getSomething(self.playerOnDeadlock)[0]
         else:
             return self.getSomething(self.playerOnGoal)[0]
-    
+
     def getWalls(self):
         return self.getSomething(self.wall)
-    
+
     def getDeadlocks(self):
         return self.getSomething(self.deadlock)
-        
+
     # def simplifyMap(self, block, goal):
     #     simpleMap = self.sm
-    #     
+    #
     #     for x in self.getBlocks() and x != block:
     #         simpleMap[x[1]][x[0]] = self.space
     #     for x in self.getGoals() and x != goal:
     #         simpleMap[x[1]][x[0]] = self.space
-    #     
+    #
     #     m = SokoMap()
     #     m.setMap(simpleMap)
     #     return m
-    
+
     def isLegal(self, nplayer):
         (nx, ny) = nplayer
         (x, y) = self.getPlayer()
-        
+
         #self.printMap()
-        
-        
+
+
         if nx < 0 or ny < 0 or ny >= len(self.sm) or nx >= len(self.sm[ny]):
             return False
-        
+
         if self.sm[ny][nx] == self.wall:
             return False # cant move into a wall
-        
+
         if self.sm[ny][nx] == self.block or self.sm[ny][nx] == self.blockOnGoal:
             # is trying to push a block
             # the only way this works is if the space after the block is free
             # or a goal so we calculate where the block is going to be pushed
             # into and see if it's "open"
-            
+
             xdiff = nx - x
             ydiff = ny - y
-            
+
             bx = nx + xdiff
             by = ny + ydiff
-            
-            
+
+
             # print "x,y=",x,y
             # print "nx,ny=",nx,ny
             # print self.sm[ny][nx]
             # print "bx,by=",bx, by
             # print self.sm[by][bx]
-            
-            if (self.sm[by][bx] == self.block or 
-                self.sm[by][bx] == self.wall or 
+
+            if (self.sm[by][bx] == self.block or
+                self.sm[by][bx] == self.wall or
                 self.sm[by][bx] == self.blockOnGoal or
                 self.sm[by][bx] == self.deadlock
                 ):
                 return False
-            
-            
+
+
         # everything is OK
         return True
-    
+
     def isSolution(self):
-        if len(self.getUnplacedBlocks()) != 0:
-            return False
-        else:
-            return True
+        return (len(self.getUnplacedBlocks()) == 0)
 
     def tunnelMacro(self, nMap, box, push):
         (px, py) = push
         (bx, by) = box
-        
+
         if px != 0:
             # horizontal push
             while nMap[by+1][bx] == self.wall and nMap[by-1][bx] == self.wall:
@@ -192,7 +189,7 @@ class SokoMap:
                 if nMap[by+1][bx] != self.space:
                     return None
                 by = by + 1
-        
+
         if (bx, by) != box:
             # Some puzzles have multiple tunnels and require a box to pushed
             # into the tunnel and then the player to travel through another
@@ -201,37 +198,37 @@ class SokoMap:
             # but rather leave it on the edge
             bx = bx - px
             by = by - py
-            
+
             return (bx, by)
-        
+
         return None
-    
+
     def addMove(self, m):
         self.moveList.append(m)
-    
+
     def setMoveList(self, l):
         self.moveList = deepcopy(l)
-    
+
     def getMoveList(self):
         return self.moveList
 
-    
+
     def move(self, nplayer):
         (x,y) = self.getPlayer()
         nMap = deepcopy(self.sm)
         box = None
-        
+
         # Transform the current (past) location of the player
- 
+
         if nMap[y][x] == self.player:
             nMap[y][x] = self.space
         elif nMap[y][x] == self.playerOnDeadlock:
             nMap[y][x] = self.deadlock
         else:
             nMap[y][x] = self.goal
-        
+
         # transform the new location of the player
-        
+
         (nx,ny) = nplayer
         xdiff = nx - x
         ydiff = ny - y
@@ -249,12 +246,12 @@ class SokoMap:
         else:
             carry = True
             nMap[ny][nx] = self.playerOnGoal
-        
+
         # push a block into a new space if necessary
         if carry:
             bx = nx + xdiff
             by = ny + ydiff
-			
+
             box = self.tunnelMacro(nMap, (bx, by), m)
             #box = None
             if box is not None:
@@ -272,18 +269,18 @@ class SokoMap:
                     nMap[ny][nx] = self.goal
                 else:
                     print "WTF1=", nMap[ny][nx]
-    
+
                 nx = bx - xdiff
                 ny = by - ydiff
                 # it must be a space (that's checked inside tunnelMacro)
-                
+
                 nMap[ny][nx] = self.player
-			          
+
             # print ""
             # print bx,by
             # for line in nMap:
             #     print line
-            
+
             # Place the box
             if nMap[by][bx] == self.space:
                 nMap[by][bx] = self.block
@@ -291,42 +288,42 @@ class SokoMap:
                 nMap[by][bx] = self.blockOnGoal
             else:
                 print "WTF2=", nMap[by][bx]
-                
-        
+
+
         nSokoMap = SokoMap()
         nSokoMap.setMap(nMap)
         nSokoMap.setMoveList(self.getMoveList())
         nSokoMap.addMove(m)
-        
+
         # if box is not None:
         #     nSokoMap.printMap()
         return nSokoMap
-    
+
     def children(self):
         childList = []
         player = self.getPlayer()
-        
+
         # move up
         (x,y) = player
         y = y - 1
         nplayer = (x,y)
         if self.isLegal(nplayer):
             childList.append(self.move(nplayer))
-        
+
         # move down
         (x,y) = player
         y = y + 1
         nplayer = (x,y)
         if self.isLegal(nplayer):
             childList.append(self.move(nplayer))
-        
+
         # move left
         (x,y) = player
         x = x - 1
         nplayer = (x,y)
         if self.isLegal(nplayer):
             childList.append(self.move(nplayer))
-            
+
         # move right
         (x,y) = player
         x = x + 1
@@ -335,11 +332,11 @@ class SokoMap:
             childList.append(self.move(nplayer))
 
         return childList
-    
+
     def getNeighbors(self, node):
         (x,y) = node
         suc = []
-        
+
         # X+1
         try:
             if self.sm[y][x+1] != self.wall and y >= 0 and x >= 0:
@@ -364,11 +361,11 @@ class SokoMap:
                 suc.append((x, y-1))
         except IndexError:
             pass
-        
+
         #print node, suc
         return suc
-        
-        
+
+
     def shortestPath(self, source, target):
         """Dijkstra's algorithm from the pseudocode in wikipedia"""
         dist = {}
@@ -391,32 +388,32 @@ class SokoMap:
                     d.pop(u)
                 else:
                     break
-            
+
             if dist[u] == sys.maxint: # remaining nodes are inaccessible
                 break
-                
+
             q.remove(u)
-            
-            
+
+
             if u == target: # target found
                 break
-                
+
             for v in self.getNeighbors(u):
                 alt = dist[u] + 1
                 if alt < dist[v]:
                     dist[v] = alt
                     prev[v] = u
-        
+
         s = []
         u = target
         while prev[u] is not None:
             s.append(u)
             u = prev[u]
         s.reverse()
-        
+
         return s
-    
-    
+
+
     def buildInfluenceTable(self):
         self.influenceTable = {}
         for sy,a in enumerate(self.sm):
@@ -458,7 +455,7 @@ class SokoMap:
                                 if s in gpath:
                                     sscore = sscore / 2
                                     break
-                                    
+
                             # Connection
                             si = path.index(s)
                             if len(path) < si+1:
@@ -473,13 +470,13 @@ class SokoMap:
                                     sscore = sscore + 2
                                 else:
                                     sscore = sscore + 1
-                            
+
                             # Tunnel
                             if si > 0:
                                 (mx, my) = path[si-1]
                                 px = x - mx
                                 py = y - my
-                                
+
                                 if px != 0: # horizontal push
                                     if self.sm[my+1][mx] == self.wall and \
                                        self.sm[my-1][mx] == self.wall:
@@ -488,11 +485,11 @@ class SokoMap:
                                     if self.sm[my][mx+1] == self.wall and \
                                        self.sm[my][mx-1] == self.wall:
                                         sscore = 0
-                            
+
                             score = score + sscore
                         inf[(tx, ty)] = score
                 self.influenceTable[(sx, sy)] = deepcopy(inf)
-                
+
         average = 0.0
         count = 0
 
@@ -500,52 +497,52 @@ class SokoMap:
             for kk, vv in v:
                 count = count + 1
                 average = average + vv
-                
+
         average = average / count
         if average < 6:
             self.influenceThresh = 6
         else:
             self.influenceThresh = average
-        
+
         self.influenceHistory = 10
-                
-                
-    
+
+
+
     def staticDeadlock(self):
         """Detects fixed deadlocks (very basic, not perfect"""
 
-		# Place Deadlock Markers in corners (without goals)
+        # Place Deadlock Markers in corners (without goals)
         for y,a in enumerate(self.sm):
             for x,b in enumerate(self.sm[y]):
                 if x == 0 or x == (len(self.sm[0])-1) or \
-				   y == 0 or (y == len(self.sm)-1):
+                   y == 0 or (y == len(self.sm)-1):
                     continue
                 if self.sm[y][x] == self.space:
                     try:
                         if self.sm[y-1][x] == self.wall and \
-						   self.sm[y][x+1] == self.wall:
+                           self.sm[y][x+1] == self.wall:
                             self.sm[y][x] = self.deadlock
                     except IndexError:
                         pass
                     try:
                         if self.sm[y+1][x] == self.wall and \
-						   self.sm[y][x+1] == self.wall:
+                           self.sm[y][x+1] == self.wall:
                             self.sm[y][x] = self.deadlock
                     except IndexError:
                         pass
                     try:
                         if self.sm[y-1][x] == self.wall and \
-						   self.sm[y][x-1] == self.wall:
+                           self.sm[y][x-1] == self.wall:
                             self.sm[y][x] = self.deadlock
                     except IndexError:
                         pass
                     try:
                         if self.sm[y+1][x] == self.wall and \
-						   self.sm[y][x-1] == self.wall:
+                           self.sm[y][x-1] == self.wall:
                             self.sm[y][x] = self.deadlock
                     except IndexError:
                         pass
-        
+
         # Connect Deadlock Markers if they next to a contin. wall w/o goals
         for dead in self.getDeadlocks():
             (dx,dy) = dead
@@ -553,7 +550,7 @@ class SokoMap:
             down = True
             found = False
             x = dx
-            
+
             #print "Deadlock: ",dead
             ##################
             ### HORIZONTAL ###
@@ -563,7 +560,7 @@ class SokoMap:
                 if self.sm[dy][x] == self.deadlock:
                     found = True
                     break;
-                
+
             if found:
                 sx = x
                 while x != dx:
@@ -585,7 +582,7 @@ class SokoMap:
                             up = down = False
                     except IndexError:
                         down = up = False
-                
+
                 if up or down:
                     x = sx
                     while x != dx:
@@ -594,7 +591,7 @@ class SokoMap:
                         elif self.sm[dy][x] == self.player:
                             self.sm[dy][x] = self.playerOnDeadlock
                         x = x + 1
-                
+
             ################
             ### VERTICAL ###
             ################
@@ -612,7 +609,7 @@ class SokoMap:
                         break;
                 except IndexError:
                     break;
-                    
+
             if found:
                 sy = y
                 while y != dy:
@@ -634,7 +631,7 @@ class SokoMap:
                             up = down = False
                     except IndexError:
                         down = up = False
-                           
+
                 if up or down:
                     y = sy
                     while y != dy:
