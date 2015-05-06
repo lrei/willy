@@ -506,7 +506,27 @@ class SokoMap:
 
         self.influenceHistory = 10
 
+    class DirectView:
+        def __init__(self, sm):
+            self.sm = sm
 
+        def get(self, y, x):
+            return self.sm[y][x]
+
+        def set(self, y, x, val):
+            self.sm[y][x] = val
+            return
+
+    class Swap_XY_View:
+        def __init__(self, sm):
+            self.sm = sm
+
+        def get(self, y, x):
+            return self.sm[x][y]
+
+        def set(self, y, x, val):
+            self.sm[x][y] = val
+            return
 
     def staticDeadlock(self):
         """Detects fixed deadlocks (very basic, not perfect"""
@@ -544,41 +564,39 @@ class SokoMap:
                         pass
 
         # Connect Deadlock Markers if they next to a contin. wall w/o goals
-        for dead in self.getDeadlocks():
-            (dx,dy) = dead
+        def connect_markers(dx,dy, view):
             up = True
             down = True
             found = False
             x = dx
 
-            #print "Deadlock: ",dead
-            ##################
-            ### HORIZONTAL ###
-            ##################
             while x > 1:
                 x = x - 1
-                if self.sm[dy][x] == self.deadlock:
-                    found = True
-                    break;
+                try:
+                    if view.get(dy,x) == self.deadlock:
+                        found = True
+                        break
+                except IndexError:
+                    break
 
             if found:
                 sx = x
                 while x != dx:
                     x = x + 1
                     try:
-                        if self.sm[dy+1][x] != self.wall and down:
+                        if view.get(dy+1,x) != self.wall and down:
                             down = False
                     except IndexError:
                         down = False
                     try:
-                        if self.sm[dy-1][x] != self.wall and up:
+                        if view.get(dy-1,x) != self.wall and up:
                             up = False
                     except IndexError:
                         up = False
                     try:
-                        if self.sm[dy][x] != self.space and \
-                           self.sm[dy][x] != self.player and \
-                           self.sm[dy][x] != self.deadlock:
+                        if view.get(dy,x) != self.space and \
+                           view.get(dy,x) != self.player and \
+                           view.get(dy,x) != self.deadlock:
                             up = down = False
                     except IndexError:
                         down = up = False
@@ -586,57 +604,16 @@ class SokoMap:
                 if up or down:
                     x = sx
                     while x != dx:
-                        if self.sm[dy][x] == self.space:
-                            self.sm[dy][x] = self.deadlock
-                        elif self.sm[dy][x] == self.player:
-                            self.sm[dy][x] = self.playerOnDeadlock
+                        if view.get(dy,x) == self.space:
+                            view.set(dy, x, self.deadlock)
+                        elif view.get(dy,x) == self.player:
+                            view.set(dy, x, self.playerOnDeadlock)
                         x = x + 1
 
-            ################
-            ### VERTICAL ###
-            ################
+        xy_v = self.DirectView(self.sm)
+        yx_v = self.Swap_XY_View(self.sm)
+        for dead in self.getDeadlocks():
             (dx,dy) = dead
-            up = True
-            down = True
-            found = False
-            y = dy
+            connect_markers(dx, dy, xy_v)
+            connect_markers(dy, dx, yx_v)
 
-            while y > 1:
-                y = y - 1
-                try:
-                    if self.sm[y][dx] == self.deadlock:
-                        found = True
-                        break;
-                except IndexError:
-                    break;
-
-            if found:
-                sy = y
-                while y != dy:
-                    y = y + 1
-                    try:
-                        if self.sm[y][dx+1] != self.wall and down:
-                            down = False
-                    except IndexError:
-                        down = False
-                    try:
-                        if self.sm[y][dx-1] != self.wall and up:
-                            up = False
-                    except IndexError:
-                        up = False
-                    try:
-                        if self.sm[y][dx] != self.space and \
-                           self.sm[y][dx] != self.player and \
-                           self.sm[y][dx] != self.deadlock:
-                            up = down = False
-                    except IndexError:
-                        down = up = False
-
-                if up or down:
-                    y = sy
-                    while y != dy:
-                        if self.sm[y][dx] == self.space:
-                            self.sm[y][dx] = self.deadlock
-                        elif self.sm[y][dx] == self.player:
-                            self.sm[y][dx] = self.playerOnDeadlock
-                        y = y + 1
