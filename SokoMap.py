@@ -531,6 +531,16 @@ class SokoMap:
     def staticDeadlock(self):
         """Detects fixed deadlocks (very basic, not perfect"""
 
+        def _place_deadlock(y,x,delta_y,delta_x):
+            try:
+                if self.sm[y+delta_y][x] == self.wall and \
+                   self.sm[y][x+delta_x] == self.wall:
+                    self.sm[y][x] = self.deadlock
+                    return True
+            except IndexError:
+                pass
+            return False
+
         # Place Deadlock Markers in corners (without goals)
         for y,a in enumerate(self.sm):
             for x,b in enumerate(self.sm[y]):
@@ -538,30 +548,10 @@ class SokoMap:
                    y == 0 or (y == len(self.sm)-1):
                     continue
                 if self.sm[y][x] == self.space:
-                    try:
-                        if self.sm[y-1][x] == self.wall and \
-                           self.sm[y][x+1] == self.wall:
-                            self.sm[y][x] = self.deadlock
-                    except IndexError:
-                        pass
-                    try:
-                        if self.sm[y+1][x] == self.wall and \
-                           self.sm[y][x+1] == self.wall:
-                            self.sm[y][x] = self.deadlock
-                    except IndexError:
-                        pass
-                    try:
-                        if self.sm[y-1][x] == self.wall and \
-                           self.sm[y][x-1] == self.wall:
-                            self.sm[y][x] = self.deadlock
-                    except IndexError:
-                        pass
-                    try:
-                        if self.sm[y+1][x] == self.wall and \
-                           self.sm[y][x-1] == self.wall:
-                            self.sm[y][x] = self.deadlock
-                    except IndexError:
-                        pass
+                    _place_deadlock(y,x,-1,-1) or \
+                    _place_deadlock(y,x,-1,1) or \
+                    _place_deadlock(y,x,1,-1) or \
+                    _place_deadlock(y,x,1,1)
 
         # Connect Deadlock Markers if they next to a contin. wall w/o goals
         def connect_markers(dx,dy, view):
