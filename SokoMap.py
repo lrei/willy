@@ -173,6 +173,16 @@ class SokoMap:
             #      $$    #$     #$   $$
             #      ##    #$     $$   $$
             #
+            def _my_check(((dy1,dx1),(dy2,dx2))):
+                filtered = [self.blockOnGoal if self.sm[by][bx] == self.goal \
+                                             else self.block]
+                for (dy,dx) in [(dy1,dx1),(dy2,dx2),(dy1+dy2,dx1+dx2)]:
+                    x = self.sm[by+dy][bx+dx]
+                    if (x == self.block or x == self.wall or x == self.blockOnGoal):
+                        filtered.append(x)
+                # There are 4 in total
+                return (len(filtered) == 4 and (self.block in filtered))
+
             for y_offset in [(-1,0),(1,0)]:
                 if ((y_offset != min_n_off) and (not (y_offset == (-1,0) and by == 0 ))):
                     for x_offset in [(0,-1),(0,1)]:
@@ -181,15 +191,8 @@ class SokoMap:
                                     (x_offset,y_offset), \
                                     (y_offset,x_offset) \
                                     ]:
-                                ((dy1,dx1),(dy2,dx2)) = dir_offsets
-                                contents = [self.blockOnGoal if self.sm[by][bx] == self.goal else self.block]
-                                for (dy,dx) in [(dy1,dx1),(dy2,dx2),(dy1+dy2,dx1+dx2)]:
-                                    contents.append(self.sm[by+dy][bx+dx])
-                                filtered = [x for x in contents if (x == self.block or x == self.wall or x == self.blockOnGoal)]
-                                # There are 4 in total
-                                if len(filtered) == 4:
-                                    if (self.block in filtered):
-                                        return False
+                                if (_my_check(dir_offsets)):
+                                    return False
 
         # everything is OK
         return True
