@@ -80,8 +80,8 @@ class SokoMap:
             for i in l:
                 if i == something:
                     result.append((x,y))
-                x = x + 1
-            y = y + 1
+                x += 1
+            y += 1
 
         return result
 
@@ -196,8 +196,8 @@ class SokoMap:
             # tunnel and push it out of the tunnel again - credit: AJ
             # To solve that, the macro will not push the box out of the tunnel
             # but rather leave it on the edge
-            bx = bx - px
-            by = by - py
+            bx -= px
+            by -= py
 
             return (bx, by)
 
@@ -404,7 +404,7 @@ class SokoMap:
                             for g in self.getGoals():
                                 gpath = self.shortestPath((sx,sy), g)
                                 if s in gpath:
-                                    sscore = sscore / 2
+                                    sscore /= 2
                                     break
 
                             # Connection
@@ -418,9 +418,9 @@ class SokoMap:
                                 hy = y - py
                                 # Same poor test for "pushability" as before
                                 if self.sm[hy][hx] != self.wall:
-                                    sscore = sscore + 2
+                                    sscore += 2
                                 else:
-                                    sscore = sscore + 1
+                                    sscore += 1
 
                             # Tunnel
                             if si > 0:
@@ -437,7 +437,7 @@ class SokoMap:
                                        self.sm[my][mx-1] == self.wall:
                                         sscore = 0
 
-                            score = score + sscore
+                            score += sscore
                         inf[(tx, ty)] = score
                 self.influenceTable[(sx, sy)] = deepcopy(inf)
 
@@ -446,10 +446,10 @@ class SokoMap:
 
         for k,v in self.influenceTable:
             for kk, vv in v:
-                count = count + 1
-                average = average + vv
+                count += 1
+                average += vv
 
-        average = average / count
+        average /= count
         if average < 6:
             self.influenceThresh = 6
         else:
@@ -536,7 +536,7 @@ class SokoMap:
             x = dx
 
             while x > 1:
-                x = x - 1
+                x -= 1
                 try:
                     if view.get((dy,x)) == self.deadlock:
                         found = True
@@ -547,7 +547,7 @@ class SokoMap:
             if found:
                 sx = x
                 while x != dx:
-                    x = x + 1
+                    x += 1
                     try:
                         if view.get((dy+1,x)) != self.wall and down:
                             down = False
@@ -575,7 +575,7 @@ class SokoMap:
                             view.set((dy,x), self.deadlock)
                         elif val == self.player:
                             view.set((dy,x), self.playerOnDeadlock)
-                        x = x + 1
+                        x += 1
 
         xy_v = self.DirectView(self.sm)
         yx_v = self.Swap_XY_View(xy_v)
