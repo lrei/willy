@@ -300,12 +300,10 @@ class SokoMap:
         return nSokoMap
 
     def _filter_neighbours(self, (x,y), offsets, filt):
-        ret = []
         for (dx,dy) in offsets:
             nxy = (x+dx,y+dy)
             if (filt(nxy)):
-                ret.append(nxy)
-        return ret
+                yield nxy
 
     def children(self):
         return [self.move(nxy) for nxy in self._filter_neighbours(self.getPlayer(), [(0,-1),(0,1),(-1,0),(1,0)], (lambda nxy: self.isLegal(nxy)))]
