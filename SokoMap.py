@@ -303,33 +303,11 @@ class SokoMap:
         childList = []
         player = self.getPlayer()
 
-        # move up
         (x,y) = player
-        y = y - 1
-        nplayer = (x,y)
-        if self.isLegal(nplayer):
-            childList.append(self.move(nplayer))
-
-        # move down
-        (x,y) = player
-        y = y + 1
-        nplayer = (x,y)
-        if self.isLegal(nplayer):
-            childList.append(self.move(nplayer))
-
-        # move left
-        (x,y) = player
-        x = x - 1
-        nplayer = (x,y)
-        if self.isLegal(nplayer):
-            childList.append(self.move(nplayer))
-
-        # move right
-        (x,y) = player
-        x = x + 1
-        nplayer = (x,y)
-        if self.isLegal(nplayer):
-            childList.append(self.move(nplayer))
+        for (dx,dy) in [(0,-1),(0,1),(-1,0),(1,0)]:
+            nplayer = (x+dx,y+dy)
+            if self.isLegal(nplayer):
+                childList.append(self.move(nplayer))
 
         return childList
 
