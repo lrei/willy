@@ -299,33 +299,25 @@ class SokoMap:
         #     nSokoMap.printMap()
         return nSokoMap
 
+    def _filter_neighbours(self, (x,y), offsets, filt):
+        ret = []
+        for (dx,dy) in offsets:
+            nxy = (x+dx,y+dy)
+            if (filt(nxy)):
+                ret.append(nxy)
+        return ret
+
     def children(self):
-        childList = []
-        player = self.getPlayer()
-
-        (x,y) = player
-        for (dx,dy) in [(0,-1),(0,1),(-1,0),(1,0)]:
-            nplayer = (x+dx,y+dy)
-            if self.isLegal(nplayer):
-                childList.append(self.move(nplayer))
-
-        return childList
+        return [self.move(nxy) for nxy in self._filter_neighbours(self.getPlayer(), [(0,-1),(0,1),(-1,0),(1,0)], (lambda nxy: self.isLegal(nxy)))]
 
     def getNeighbors(self, node):
-        (x,y) = node
-        suc = []
-
-        for (dx,dy) in [(1,0),(-1,0),(0,1),(0,-1)]:
-            (nx,ny) = (x+dx,y+dy)
+        def filt((nx,ny)):
             try:
-                if ny >= 0 and nx >= 0 and self.sm[ny][nx] != self.wall:
-                    suc.append((nx,ny))
+                return ny >= 0 and nx >= 0 and self.sm[ny][nx] != self.wall
             except IndexError:
-                pass
+                return False
 
-        #print node, suc
-        return suc
-
+        return self._filter_neighbours(node, [(1,0),(-1,0),(0,1),(0,-1)], filt)
 
     def shortestPath(self, source, target):
         """Dijkstra's algorithm from the pseudocode in wikipedia"""
