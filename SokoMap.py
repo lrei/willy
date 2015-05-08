@@ -315,30 +315,13 @@ class SokoMap:
         (x,y) = node
         suc = []
 
-        # X+1
-        try:
-            if self.sm[y][x+1] != self.wall and y >= 0 and x >= 0:
-                suc.append((x+1, y))
-        except IndexError:
-            pass
-        # X-1
-        try:
-            if self.sm[y][x-1] != self.wall and y >= 0 and x >= 1:
-                suc.append((x-1, y))
-        except IndexError:
-            pass
-         # Y+1
-        try:
-            if self.sm[y+1][x] != self.wall and y >= 0 and x >= 0:
-                suc.append((x, y+1))
-        except IndexError:
-            pass
-        # Y-1
-        try:
-            if self.sm[y-1][x] != self.wall and y >= 1 and x >= 0:
-                suc.append((x, y-1))
-        except IndexError:
-            pass
+        for (dx,dy) in [(1,0),(-1,0),(0,1),(0,-1)]:
+            (nx,ny) = (x+dx,y+dy)
+            try:
+                if ny >= 0 and nx >= 0 and self.sm[ny][nx] != self.wall:
+                    suc.append((nx,ny))
+            except IndexError:
+                pass
 
         #print node, suc
         return suc
