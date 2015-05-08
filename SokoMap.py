@@ -13,6 +13,9 @@ class SokoMap:
     TILE_PLAYER_ON_DEADLOCK = '+'
 
     TILES_BLOCKY = frozenset([TILE_BLOCK, TILE_BLOCK_ON_GOAL])
+    TILES_WRONG_FOR_BLOCK = frozenset([TILE_BLOCK, TILE_WALL, TILE_BLOCK_ON_GOAL, TILE_DEADLOCK])
+    TILES_WRONG_FOR_2x2 = frozenset([TILE_BLOCK, TILE_WALL, TILE_BLOCK_ON_GOAL])
+    TILES_SPACEY = frozenset([TILE_SPACE, TILE_PLAYER, TILE_DEADLOCK])
 
     def __init__(self):
         self.sm = []
@@ -160,11 +163,7 @@ class SokoMap:
             # print "bx,by=",bx, by
             # print self.sm[by][bx]
 
-            if (self.sm[by][bx] == self.TILE_BLOCK or
-                self.sm[by][bx] == self.TILE_WALL or
-                self.sm[by][bx] == self.TILE_BLOCK_ON_GOAL or
-                self.sm[by][bx] == self.TILE_DEADLOCK
-                ):
+            if self.sm[by][bx] in self.TILES_WRONG_FOR_BLOCK:
                 return False
 
             min_n_off = (-ydiff,-xdiff)
@@ -179,7 +178,7 @@ class SokoMap:
                                              else self.TILE_BLOCK]
                 for (dy,dx) in [(dy1,dx1),(dy2,dx2),(dy1+dy2,dx1+dx2)]:
                     x = self.sm[by+dy][bx+dx]
-                    if (x == self.TILE_BLOCK or x == self.TILE_WALL or x == self.TILE_BLOCK_ON_GOAL):
+                    if x in self.TILES_WRONG_FOR_2x2:
                         filtered.append(x)
                 # There are 4 in total
                 return (len(filtered) == 4 and (self.TILE_BLOCK in filtered))
@@ -587,10 +586,7 @@ class SokoMap:
                     except IndexError:
                         up = False
                     try:
-                        val = view.get((dy,x))
-                        if val != self.TILE_SPACE and \
-                           val != self.TILE_PLAYER and \
-                           val != self.TILE_DEADLOCK:
+                        if not view.get((dy,x)) in self.TILES_SPACEY:
                             up = down = False
                     except IndexError:
                         down = up = False
