@@ -12,6 +12,8 @@ class SokoMap:
     TILE_DEADLOCK = 'x'
     TILE_PLAYER_ON_DEADLOCK = '+'
 
+    TILES_BLOCKY = frozenset([TILE_BLOCK, TILE_BLOCK_ON_GOAL])
+
     def __init__(self):
         self.sm = []
 
@@ -139,7 +141,7 @@ class SokoMap:
         if self.sm[ny][nx] == self.TILE_WALL:
             return False # cant move into a wall
 
-        if self.sm[ny][nx] == self.TILE_BLOCK or self.sm[ny][nx] == self.TILE_BLOCK_ON_GOAL:
+        if self.sm[ny][nx] in self.TILES_BLOCKY:
             # is trying to push a block
             # the only way this works is if the space after the block is free
             # or a goal so we calculate where the block is going to be pushed
