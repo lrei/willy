@@ -461,23 +461,47 @@ class SokoMap:
         def __init__(self, sm):
             self.sm = sm
 
-        def get(self, y, x):
+        def get(self, (y, x)):
             return self.sm[y][x]
 
-        def set(self, y, x, val):
+        def set(self, (y, x), val):
             self.sm[y][x] = val
             return
 
-    class Swap_XY_View:
-        def __init__(self, sm):
-            self.sm = sm
+        def y_len(self):
+            return len(self.sm)
 
-        def get(self, y, x):
-            return self.sm[x][y]
+        def x_len(self):
+            return max([row.len for row in self.sm])
 
-        def set(self, y, x, val):
-            self.sm[x][y] = val
-            return
+    class Proxy_View:
+        def __init__(self, v):
+            self.v = v
+
+        def _map(self, p):
+            return p
+
+        def get(self, p):
+            return self.v.get(self._map(p))
+
+        def set(self, p, val):
+            return self.v.set(self._map(p), val)
+
+        def y_len(self):
+            return self.v.y_len()
+
+        def x_len(self):
+            return self.v.x_len()
+
+    class Swap_XY_View(Proxy_View):
+        def _map(self, (y, x)):
+            return (x,y)
+
+        def y_len(self):
+            return self.v.x_len()
+
+        def x_len(self):
+            return self.v.y_len()
 
     def staticDeadlock(self):
         """Detects fixed deadlocks (very basic, not perfect"""
@@ -514,7 +538,7 @@ class SokoMap:
             while x > 1:
                 x = x - 1
                 try:
-                    if view.get(dy,x) == self.deadlock:
+                    if view.get((dy,x)) == self.deadlock:
                         found = True
                         break
                 except IndexError:
@@ -525,19 +549,20 @@ class SokoMap:
                 while x != dx:
                     x = x + 1
                     try:
-                        if view.get(dy+1,x) != self.wall and down:
+                        if view.get((dy+1,x)) != self.wall and down:
                             down = False
                     except IndexError:
                         down = False
                     try:
-                        if view.get(dy-1,x) != self.wall and up:
+                        if view.get((dy-1,x)) != self.wall and up:
                             up = False
                     except IndexError:
                         up = False
                     try:
-                        if view.get(dy,x) != self.space and \
-                           view.get(dy,x) != self.player and \
-                           view.get(dy,x) != self.deadlock:
+                        val = view.get((dy,x))
+                        if val != self.space and \
+                           val != self.player and \
+                           val != self.deadlock:
                             up = down = False
                     except IndexError:
                         down = up = False
@@ -545,14 +570,15 @@ class SokoMap:
                 if up or down:
                     x = sx
                     while x != dx:
-                        if view.get(dy,x) == self.space:
-                            view.set(dy, x, self.deadlock)
-                        elif view.get(dy,x) == self.player:
-                            view.set(dy, x, self.playerOnDeadlock)
+                        val = view.get((dy,x))
+                        if val == self.space:
+                            view.set((dy,x), self.deadlock)
+                        elif val == self.player:
+                            view.set((dy,x), self.playerOnDeadlock)
                         x = x + 1
 
         xy_v = self.DirectView(self.sm)
-        yx_v = self.Swap_XY_View(self.sm)
+        yx_v = self.Swap_XY_View(xy_v)
         for dead in self.getDeadlocks():
             (dx,dy) = dead
             connect_markers(dx, dy, xy_v)
