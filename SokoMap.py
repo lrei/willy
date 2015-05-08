@@ -89,18 +89,17 @@ class SokoMap:
 
         return result
 
-    def getGoals(self):
+    def _getSeveralThings(self, somethings):
         total = []
-        total.extend(self.getSomething(self.TILE_GOAL))
-        total.extend(self.getSomething(self.TILE_BLOCK_ON_GOAL))
-        total.extend(self.getSomething(self.TILE_PLAYER_ON_GOAL))
+        for thing in somethings:
+            total.extend(self.getSomething(thing))
         return total
 
+    def getGoals(self):
+        return self._getSeveralThings([self.TILE_GOAL, self.TILE_BLOCK_ON_GOAL, self.TILE_PLAYER_ON_GOAL])
+
     def getBlocks(self):
-        total = []
-        total.extend(self.getSomething(self.TILE_BLOCK))
-        total.extend(self.getSomething(self.TILE_BLOCK_ON_GOAL))
-        return total
+        return self._getSeveralThings([self.TILE_BLOCK, self.TILE_BLOCK_ON_GOAL])
 
     def getUnplacedBlocks(self):
         return self.getSomething(self.TILE_BLOCK)
