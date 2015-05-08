@@ -2,14 +2,15 @@ import sys
 from copy import deepcopy
 
 class SokoMap:
+    TILE_BLOCK = '$'
+    TILE_GOAL = '.'
+    TILE_PLAYER = '@'
+    TILE_SPACE = ' '
+
     def __init__(self):
         self.sm = []
 
         # Values of map pieces
-        self.goal = '.'
-        self.player = '@'
-        self.block = '$'
-        self.space = ' '
         self.wall = '#'
         self.blockOnGoal = '*'
         self.playerOnGoal = '!'
@@ -87,23 +88,23 @@ class SokoMap:
 
     def getGoals(self):
         total = []
-        total.extend(self.getSomething(self.goal))
+        total.extend(self.getSomething(self.TILE_GOAL))
         total.extend(self.getSomething(self.blockOnGoal))
         total.extend(self.getSomething(self.playerOnGoal))
         return total
 
     def getBlocks(self):
         total = []
-        total.extend(self.getSomething(self.block))
+        total.extend(self.getSomething(self.TILE_BLOCK))
         total.extend(self.getSomething(self.blockOnGoal))
         return total
 
     def getUnplacedBlocks(self):
-        return self.getSomething(self.block)
+        return self.getSomething(self.TILE_BLOCK)
 
     def getPlayer(self):
-        if len(self.getSomething(self.player)) is not 0:
-            return self.getSomething(self.player)[0]
+        if len(self.getSomething(self.TILE_PLAYER)) is not 0:
+            return self.getSomething(self.TILE_PLAYER)[0]
         elif len(self.getSomething(self.playerOnDeadlock)) is not 0:
             return self.getSomething(self.playerOnDeadlock)[0]
         else:
@@ -119,9 +120,9 @@ class SokoMap:
     #     simpleMap = self.sm
     #
     #     for x in self.getBlocks() and x != block:
-    #         simpleMap[x[1]][x[0]] = self.space
+    #         simpleMap[x[1]][x[0]] = self.TILE_SPACE
     #     for x in self.getGoals() and x != goal:
-    #         simpleMap[x[1]][x[0]] = self.space
+    #         simpleMap[x[1]][x[0]] = self.TILE_SPACE
     #
     #     m = SokoMap()
     #     m.setMap(simpleMap)
@@ -140,7 +141,7 @@ class SokoMap:
         if self.sm[ny][nx] == self.wall:
             return False # cant move into a wall
 
-        if self.sm[ny][nx] == self.block or self.sm[ny][nx] == self.blockOnGoal:
+        if self.sm[ny][nx] == self.TILE_BLOCK or self.sm[ny][nx] == self.blockOnGoal:
             # is trying to push a block
             # the only way this works is if the space after the block is free
             # or a goal so we calculate where the block is going to be pushed
@@ -159,7 +160,7 @@ class SokoMap:
             # print "bx,by=",bx, by
             # print self.sm[by][bx]
 
-            if (self.sm[by][bx] == self.block or
+            if (self.sm[by][bx] == self.TILE_BLOCK or
                 self.sm[by][bx] == self.wall or
                 self.sm[by][bx] == self.blockOnGoal or
                 self.sm[by][bx] == self.deadlock
@@ -174,14 +175,14 @@ class SokoMap:
             #      ##    #$     $$   $$
             #
             def _my_check(((dy1,dx1),(dy2,dx2))):
-                filtered = [self.blockOnGoal if self.sm[by][bx] == self.goal \
-                                             else self.block]
+                filtered = [self.blockOnGoal if self.sm[by][bx] == self.TILE_GOAL \
+                                             else self.TILE_BLOCK]
                 for (dy,dx) in [(dy1,dx1),(dy2,dx2),(dy1+dy2,dx1+dx2)]:
                     x = self.sm[by+dy][bx+dx]
-                    if (x == self.block or x == self.wall or x == self.blockOnGoal):
+                    if (x == self.TILE_BLOCK or x == self.wall or x == self.blockOnGoal):
                         filtered.append(x)
                 # There are 4 in total
-                return (len(filtered) == 4 and (self.block in filtered))
+                return (len(filtered) == 4 and (self.TILE_BLOCK in filtered))
 
             for y_offset in [(-1,0),(1,0)]:
                 if ((y_offset != min_n_off) and (not (y_offset == (-1,0) and by == 0 ))):
@@ -207,13 +208,13 @@ class SokoMap:
         if px != 0:
             # horizontal push
             while nMap[by+1][bx] == self.wall and nMap[by-1][bx] == self.wall:
-                if nMap[by][bx+1] != self.space:
+                if nMap[by][bx+1] != self.TILE_SPACE:
                     return None
                 bx = bx + 1
         if py != 0:
             # vertical push
             while nMap[by][bx+1] == self.wall and nMap[by][bx-1] == self.wall:
-                if nMap[by+1][bx] != self.space:
+                if nMap[by+1][bx] != self.TILE_SPACE:
                     return None
                 by = by + 1
 
@@ -247,12 +248,12 @@ class SokoMap:
 
         # Transform the current (past) location of the player
 
-        if nMap[y][x] == self.player:
-            nMap[y][x] = self.space
+        if nMap[y][x] == self.TILE_PLAYER:
+            nMap[y][x] = self.TILE_SPACE
         elif nMap[y][x] == self.playerOnDeadlock:
             nMap[y][x] = self.deadlock
         else:
-            nMap[y][x] = self.goal
+            nMap[y][x] = self.TILE_GOAL
 
         # transform the new location of the player
 
@@ -261,15 +262,15 @@ class SokoMap:
         ydiff = ny - y
         m = (xdiff, ydiff)
         carry = False
-        if nMap[ny][nx] == self.space:
-            nMap[ny][nx] = self.player
-        elif nMap[ny][nx] == self.goal:
+        if nMap[ny][nx] == self.TILE_SPACE:
+            nMap[ny][nx] = self.TILE_PLAYER
+        elif nMap[ny][nx] == self.TILE_GOAL:
             nMap[ny][nx] = self.playerOnGoal
         elif nMap[ny][nx] == self.deadlock:
             nMap[ny][nx] = self.playerOnDeadlock
-        elif nMap[ny][nx] == self.block:
+        elif nMap[ny][nx] == self.TILE_BLOCK:
             carry = True
-            nMap[ny][nx] = self.player
+            nMap[ny][nx] = self.TILE_PLAYER
         else:
             carry = True
             nMap[ny][nx] = self.playerOnGoal
@@ -288,12 +289,12 @@ class SokoMap:
                 # print "Tunnel From ", (bx, by), " to ", box
                 (bx, by) = box
 
-                if nMap[ny][nx] == self.player:
-                    nMap[ny][nx] = self.space
+                if nMap[ny][nx] == self.TILE_PLAYER:
+                    nMap[ny][nx] = self.TILE_SPACE
                 elif nMap[ny][nx] == self.playerOnDeadlock:
                     nMap[ny][nx] = self.deadlock
                 elif nMap[ny][nx] == self.playerOnGoal:
-                    nMap[ny][nx] = self.goal
+                    nMap[ny][nx] = self.TILE_GOAL
                 else:
                     print "WTF1=", nMap[ny][nx]
 
@@ -301,7 +302,7 @@ class SokoMap:
                 ny = by - ydiff
                 # it must be a space (that's checked inside tunnelMacro)
 
-                nMap[ny][nx] = self.player
+                nMap[ny][nx] = self.TILE_PLAYER
 
             # print ""
             # print bx,by
@@ -309,9 +310,9 @@ class SokoMap:
             #     print line
 
             # Place the box
-            if nMap[by][bx] == self.space:
-                nMap[by][bx] = self.block
-            elif nMap[by][bx] == self.goal:
+            if nMap[by][bx] == self.TILE_SPACE:
+                nMap[by][bx] = self.TILE_BLOCK
+            elif nMap[by][bx] == self.TILE_GOAL:
                 nMap[by][bx] = self.blockOnGoal
             else:
                 print "WTF2=", nMap[by][bx]
@@ -549,7 +550,7 @@ class SokoMap:
                 if x == 0 or x == (len(self.sm[0])-1) or \
                    y == 0 or (y == len(self.sm)-1):
                     continue
-                if self.sm[y][x] == self.space:
+                if self.sm[y][x] == self.TILE_SPACE:
                     _place_deadlock(y,x,-1,-1) or \
                     _place_deadlock(y,x,-1,1) or \
                     _place_deadlock(y,x,1,-1) or \
@@ -587,8 +588,8 @@ class SokoMap:
                         up = False
                     try:
                         val = view.get((dy,x))
-                        if val != self.space and \
-                           val != self.player and \
+                        if val != self.TILE_SPACE and \
+                           val != self.TILE_PLAYER and \
                            val != self.deadlock:
                             up = down = False
                     except IndexError:
@@ -598,9 +599,9 @@ class SokoMap:
                     x = sx
                     while x != dx:
                         val = view.get((dy,x))
-                        if val == self.space:
+                        if val == self.TILE_SPACE:
                             view.set((dy,x), self.deadlock)
-                        elif val == self.player:
+                        elif val == self.TILE_PLAYER:
                             view.set((dy,x), self.playerOnDeadlock)
                         x += 1
 
