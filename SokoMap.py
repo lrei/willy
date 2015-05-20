@@ -299,72 +299,23 @@ class SokoMap:
         #     nSokoMap.printMap()
         return nSokoMap
 
+    def _filter_neighbours(self, (x,y), offsets, filt):
+        for (dx,dy) in offsets:
+            nxy = (x+dx,y+dy)
+            if (filt(nxy)):
+                yield nxy
+
     def children(self):
-        childList = []
-        player = self.getPlayer()
-
-        # move up
-        (x,y) = player
-        y = y - 1
-        nplayer = (x,y)
-        if self.isLegal(nplayer):
-            childList.append(self.move(nplayer))
-
-        # move down
-        (x,y) = player
-        y = y + 1
-        nplayer = (x,y)
-        if self.isLegal(nplayer):
-            childList.append(self.move(nplayer))
-
-        # move left
-        (x,y) = player
-        x = x - 1
-        nplayer = (x,y)
-        if self.isLegal(nplayer):
-            childList.append(self.move(nplayer))
-
-        # move right
-        (x,y) = player
-        x = x + 1
-        nplayer = (x,y)
-        if self.isLegal(nplayer):
-            childList.append(self.move(nplayer))
-
-        return childList
+        return [self.move(nxy) for nxy in self._filter_neighbours(self.getPlayer(), [(0,-1),(0,1),(-1,0),(1,0)], (lambda nxy: self.isLegal(nxy)))]
 
     def getNeighbors(self, node):
-        (x,y) = node
-        suc = []
+        def filt((nx,ny)):
+            try:
+                return ny >= 0 and nx >= 0 and self.sm[ny][nx] != self.wall
+            except IndexError:
+                return False
 
-        # X+1
-        try:
-            if self.sm[y][x+1] != self.wall and y >= 0 and x >= 0:
-                suc.append((x+1, y))
-        except IndexError:
-            pass
-        # X-1
-        try:
-            if self.sm[y][x-1] != self.wall and y >= 0 and x >= 1:
-                suc.append((x-1, y))
-        except IndexError:
-            pass
-         # Y+1
-        try:
-            if self.sm[y+1][x] != self.wall and y >= 0 and x >= 0:
-                suc.append((x, y+1))
-        except IndexError:
-            pass
-        # Y-1
-        try:
-            if self.sm[y-1][x] != self.wall and y >= 1 and x >= 0:
-                suc.append((x, y-1))
-        except IndexError:
-            pass
-
-        #print node, suc
-        return suc
-
+        return self._filter_neighbours(node, [(1,0),(-1,0),(0,1),(0,-1)], filt)
 
     def shortestPath(self, source, target):
         """Dijkstra's algorithm from the pseudocode in wikipedia"""
