@@ -168,6 +168,7 @@ def depth_first_search__scan(sm, h):
 
         if nodes % 1000 == 0:
             print nodes, " nodes checked"
+            sys.stdout.flush()
         if nodes == MAXNODES:
             print "Limit of nodes reached: exiting without a solution."
             sys.exit(1)
