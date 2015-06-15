@@ -3,7 +3,7 @@ import SokoMap
 
 class HashTable:
     def __init__(self):
-        self.table = []
+        self.table = {}
 
 
     def checkAdd(self, sokomap):
@@ -14,6 +14,6 @@ class HashTable:
         if key in self.table:
             return True
         else:
-            self.table.append(key)
+            self.table[key] = True
             return False
 
