@@ -183,13 +183,18 @@ def depth_first_search__scan(sm, h):
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 2:
-        print "Syntax: solver mapFile"
-        sys.exit(0)
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filename", type=str,
+            help="a path to the filename with the board.")
+    parser.add_argument("--method", type=str, default="IDAstar",
+            help="The method - \"dfs\" or \"IDAstar\"")
+    args = parser.parse_args()
 
     smap = SokoMap.SokoMap()
 
-    smap.readMap(sys.argv[1])
+    smap.readMap(args.filename)
 
     smap.printMap()
     print "-----"
@@ -205,7 +210,15 @@ if __name__ == '__main__':
     start = time.time()
     # TODO : Implement using a command line arg instead of the environment
     # variable
-    scan_function = (depth_first_search__scan if os.environ.get('WILLY_DFS') else IDAstar)
+    scan_function = IDAstar
+    if args.method == 'dfs':
+        scan_function = depth_first_search__scan
+    elif args.method == 'IDAstar':
+        scan_function = IDAstar
+    else:
+        print "Unknown scan type"
+        sys.exit(-1)
+
     sol = scan_function(smap, heuristic)
     print time.time()-start
     if sol is not None:
