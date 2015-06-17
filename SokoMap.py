@@ -15,7 +15,7 @@ class SokoMap:
     TILES_BLOCKY = frozenset([TILE_BLOCK, TILE_BLOCK_ON_GOAL])
     TILES_WRONG_FOR_BLOCK = frozenset([TILE_BLOCK, TILE_WALL, TILE_BLOCK_ON_GOAL, TILE_DEADLOCK])
     TILES_WRONG_FOR_2x2 = frozenset([TILE_BLOCK, TILE_WALL, TILE_BLOCK_ON_GOAL])
-    TILES_SPACEY = frozenset([TILE_SPACE, TILE_PLAYER, TILE_DEADLOCK])
+    TILES_SPACEY = frozenset([TILE_SPACE, TILE_DEADLOCK])
 
     def __init__(self):
         self.sm = []
@@ -28,11 +28,12 @@ class SokoMap:
 
     def __eq__(self, other):
         if isinstance(other, SokoMap):
-            return self.sm == other.sm
+            return (self.sm == other.sm and self.player == other.player)
         return NotImplemented
 
-    def setMap(self, m):
+    def setMap(self, m, (x,y)):
         self.sm = m
+        self.player = (x,y)
 
     def setG(self, val):
         self.gVal = val
@@ -54,14 +55,31 @@ class SokoMap:
         mapFile = open(fileName, 'r')
         temp = mapFile.readlines()
         SokoMap = [] # in memory map representation: list of lists of chars
+        y = 0
+        player = None
         for line in temp:
-            SokoMap.append(list(line)[0:-1]) # removes newline
+            base_l = list(line)[0:-1] # removes newline
+            l = []
+            for x in range(0,len(base_l)):
+                c = base_l[x]
+                if c == self.TILE_PLAYER:
+                    c = self.TILE_SPACE
+                    player = (x,y)
+                elif c == self.TILE_PLAYER_ON_GOAL:
+                    c = self.TILE_GOAL
+                    player = (x,y)
+                elif c == self.TILE_PLAYER_ON_DEADLOCK:
+                    c = self.TILE_DEADLOCK
+                    player = (x,y)
+                l.append(c)
+            SokoMap.append(l)
+            y += 1
 
         while SokoMap[-1] == ['\n'] or SokoMap[-1] == []:
              # remove last "line" (empty, original only had a newline)
             SokoMap.pop()
 
-        self.sm = SokoMap
+        self.setMap(SokoMap, player)
 
     def getMap(self):
         return self.sm
@@ -96,7 +114,7 @@ class SokoMap:
         return total
 
     def getGoals(self):
-        return self._getSeveralThings([self.TILE_GOAL, self.TILE_BLOCK_ON_GOAL, self.TILE_PLAYER_ON_GOAL])
+        return self._getSeveralThings([self.TILE_GOAL, self.TILE_BLOCK_ON_GOAL])
 
     def getBlocks(self):
         return self._getSeveralThings([self.TILE_BLOCK, self.TILE_BLOCK_ON_GOAL])
@@ -105,12 +123,7 @@ class SokoMap:
         return self.getSomething(self.TILE_BLOCK)
 
     def getPlayer(self):
-        if len(self.getSomething(self.TILE_PLAYER)) is not 0:
-            return self.getSomething(self.TILE_PLAYER)[0]
-        elif len(self.getSomething(self.TILE_PLAYER_ON_DEADLOCK)) is not 0:
-            return self.getSomething(self.TILE_PLAYER_ON_DEADLOCK)[0]
-        else:
-            return self.getSomething(self.TILE_PLAYER_ON_GOAL)[0]
+        return self.player
 
     def getWalls(self):
         return self.getSomething(self.TILE_WALL)
@@ -244,15 +257,6 @@ class SokoMap:
         nMap = deepcopy(self.sm)
         box = None
 
-        # Transform the current (past) location of the player
-
-        if nMap[y][x] == self.TILE_PLAYER:
-            nMap[y][x] = self.TILE_SPACE
-        elif nMap[y][x] == self.TILE_PLAYER_ON_DEADLOCK:
-            nMap[y][x] = self.TILE_DEADLOCK
-        else:
-            nMap[y][x] = self.TILE_GOAL
-
         # transform the new location of the player
 
         (nx,ny) = nplayer
@@ -260,18 +264,12 @@ class SokoMap:
         ydiff = ny - y
         m = (xdiff, ydiff)
         carry = False
-        if nMap[ny][nx] == self.TILE_SPACE:
-            nMap[ny][nx] = self.TILE_PLAYER
-        elif nMap[ny][nx] == self.TILE_GOAL:
-            nMap[ny][nx] = self.TILE_PLAYER_ON_GOAL
-        elif nMap[ny][nx] == self.TILE_DEADLOCK:
-            nMap[ny][nx] = self.TILE_PLAYER_ON_DEADLOCK
-        elif nMap[ny][nx] == self.TILE_BLOCK:
+        if nMap[ny][nx] == self.TILE_BLOCK:
             carry = True
-            nMap[ny][nx] = self.TILE_PLAYER
-        else:
+            nMap[ny][nx] = self.TILE_SPACE
+        elif nMap[ny][nx] == self.TILE_BLOCK_ON_GOAL:
             carry = True
-            nMap[ny][nx] = self.TILE_PLAYER_ON_GOAL
+            nMap[ny][nx] = self.TILE_GOAL
 
         # push a block into a new space if necessary
         if carry:
@@ -287,20 +285,11 @@ class SokoMap:
                 # print "Tunnel From ", (bx, by), " to ", box
                 (bx, by) = box
 
-                if nMap[ny][nx] == self.TILE_PLAYER:
-                    nMap[ny][nx] = self.TILE_SPACE
-                elif nMap[ny][nx] == self.TILE_PLAYER_ON_DEADLOCK:
-                    nMap[ny][nx] = self.TILE_DEADLOCK
-                elif nMap[ny][nx] == self.TILE_PLAYER_ON_GOAL:
-                    nMap[ny][nx] = self.TILE_GOAL
-                else:
-                    print "WTF1=", nMap[ny][nx]
-
                 nx = bx - xdiff
                 ny = by - ydiff
                 # it must be a space (that's checked inside tunnelMacro)
 
-                nMap[ny][nx] = self.TILE_PLAYER
+                nMap[ny][nx] = self.TILE_SPACE
 
             # print ""
             # print bx,by
@@ -317,7 +306,7 @@ class SokoMap:
 
 
         nSokoMap = SokoMap()
-        nSokoMap.setMap(nMap)
+        nSokoMap.setMap(nMap, (nx, ny))
         nSokoMap.setMoveList(self.getMoveList())
         nSokoMap.addMove(m)
 
@@ -596,8 +585,6 @@ class SokoMap:
                         val = view.get((dy,x))
                         if val == self.TILE_SPACE:
                             view.set((dy,x), self.TILE_DEADLOCK)
-                        elif val == self.TILE_PLAYER:
-                            view.set((dy,x), self.TILE_PLAYER_ON_DEADLOCK)
                         x += 1
 
         xy_v = self.DirectView(self.sm)
