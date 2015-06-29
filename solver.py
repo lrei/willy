@@ -2,7 +2,7 @@
 
 import sys, time
 import SokoMap, HashTable
-
+import os
 
 # Manhattan Distance between two points
 def manDistance(a, b):
@@ -151,15 +151,50 @@ def IDAstar(sm, h):
         closedSet = []
 
 
+def depth_first_search__scan(sm, h):
+    MAXNODES = 20000000
+    openSet = [sm]
+    ht = HashTable.HashTable()
+    ht.checkAdd(sm)
+    nodes = 0
+
+    while len(openSet) > 0:
+        currentState = openSet.pop()
+        #currentState.printMap()
+
+        nodes += 1
+        if currentState.isSolution():
+            return currentState # SOLUTION FOUND!!!
+
+        if nodes % 1000 == 0:
+            print nodes, " nodes checked"
+            sys.stdout.flush()
+        if nodes == MAXNODES:
+            print "Limit of nodes reached: exiting without a solution."
+            sys.exit(1)
+
+        for x in currentState.children():
+            # check if this has already been generated
+            if ht.checkAdd(x):
+                continue
+
+            openSet.append(x)
+    return None
+
 if __name__ == '__main__':
 
-    if len(sys.argv) != 2:
-        print "Syntax: solver mapFile"
-        sys.exit(0)
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filename", type=str,
+            help="a path to the filename with the board.")
+    parser.add_argument("--method", type=str, default="IDAstar",
+            help="The method - \"dfs\" or \"IDAstar\"")
+    args = parser.parse_args()
 
     smap = SokoMap.SokoMap()
 
-    smap.readMap(sys.argv[1])
+    smap.readMap(args.filename)
 
     smap.printMap()
     print "-----"
@@ -173,7 +208,18 @@ if __name__ == '__main__':
 
 
     start = time.time()
-    sol = IDAstar(smap, heuristic)
+    # TODO : Implement using a command line arg instead of the environment
+    # variable
+    scan_function = IDAstar
+    if args.method == 'dfs':
+        scan_function = depth_first_search__scan
+    elif args.method == 'IDAstar':
+        scan_function = IDAstar
+    else:
+        print "Unknown scan type"
+        sys.exit(-1)
+
+    sol = scan_function(smap, heuristic)
     print time.time()-start
     if sol is not None:
         sol.printMap()
