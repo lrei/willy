@@ -33,16 +33,15 @@ def heuristic(sm):
 
     # Select the best
     best = sys.maxint
-    index = 0
-    while index < len(solutions[0]):
+    for s in solutions[0]:
         usedGoal = []
         usedBlock = []
         solution = []
 
-        usedGoal.append(solutions[0][index][1])
-        usedBlock.append(solutions[0][index][0])
-        solution.append(solutions[0][index])
-        h = solutions[0][index][2]
+        usedGoal.append(s[1])
+        usedBlock.append(s[0])
+        solution.append(s)
+        h = s[2]
         for lin in solutions:
             for col in lin:
                 if col[1] not in usedGoal and col[0] not in usedBlock:
@@ -54,7 +53,6 @@ def heuristic(sm):
         if h < best:
             best = h
             result = solution
-        index = index + 1
 
     # print "-------"
     # print result
