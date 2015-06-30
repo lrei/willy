@@ -20,7 +20,6 @@ def precomputeDistances(sm):
 def heuristic(sm):
     # generate all possible combinations of goals for each block
     solutions = []
-    index = 0
     for b in sm.getBlocks():
         solution = []
         for g in sm.getGoals():
