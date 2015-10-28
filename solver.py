@@ -8,15 +8,6 @@ import os
 def manDistance(a, b):
     return abs(a[0]-b[0]) + abs(a[1]-b[1])
 
-def precomputeDistances(sm):
-    """Distances from any square to any other square.
-       Used for minmatching"""
-
-    imap = sm.getMap()
-
-
-
-
 def heuristic(sm):
     # generate all possible combinations of goals for each block
     solutions = []
