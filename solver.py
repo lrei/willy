@@ -8,19 +8,9 @@ import os
 def manDistance(a, b):
     return abs(a[0]-b[0]) + abs(a[1]-b[1])
 
-def precomputeDistances(sm):
-    """Distances from any square to any other square.
-       Used for minmatching"""
-
-    imap = sm.getMap()
-
-
-
-
 def heuristic(sm):
     # generate all possible combinations of goals for each block
     solutions = []
-    index = 0
     for b in sm.getBlocks():
         solution = []
         for g in sm.getGoals():
@@ -34,16 +24,15 @@ def heuristic(sm):
 
     # Select the best
     best = sys.maxint
-    index = 0
-    while index < len(solutions[0]):
+    for s in solutions[0]:
         usedGoal = []
         usedBlock = []
         solution = []
 
-        usedGoal.append(solutions[0][index][1])
-        usedBlock.append(solutions[0][index][0])
-        solution.append(solutions[0][index])
-        h = solutions[0][index][2]
+        usedGoal.append(s[1])
+        usedBlock.append(s[0])
+        solution.append(s)
+        h = s[2]
         for lin in solutions:
             for col in lin:
                 if col[1] not in usedGoal and col[0] not in usedBlock:
@@ -55,7 +44,6 @@ def heuristic(sm):
         if h < best:
             best = h
             result = solution
-        index = index + 1
 
     # print "-------"
     # print result
